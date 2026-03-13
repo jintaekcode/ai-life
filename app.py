@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-from datetime import datetime, timedelta
 from openai import OpenAI
 
 client = OpenAI()
@@ -215,6 +214,7 @@ if choice=="구독":
     """)
 
     st.write("결제는 Stripe 연동 필요")
+
 
 
 
