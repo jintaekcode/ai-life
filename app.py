@@ -29,7 +29,6 @@ exercise REAL,
 score REAL
 )
 """)
-
 conn.commit()
 
 # ----------------------
@@ -96,6 +95,16 @@ def send_email(to_email, report):
     server.quit()
 
 # ----------------------
+# 세션 상태 초기화
+# ----------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "email" not in st.session_state:
+    st.session_state.email = ""
+
+# ----------------------
 # UI
 # ----------------------
 st.title("🚀 PAIOS - AI 생산성 분석 서비스")
@@ -121,50 +130,58 @@ if choice == "회원가입":
 # ----------------------
 if choice == "로그인":
     st.subheader("로그인")
-    username = st.text_input("아이디")
-    password = st.text_input("비밀번호",type="password")
+    username_input = st.text_input("아이디")
+    password_input = st.text_input("비밀번호",type="password")
     if st.button("로그인"):
-        c.execute("SELECT * FROM users WHERE username=? AND password=?",(username,password))
+        c.execute("SELECT * FROM users WHERE username=? AND password=?",(username_input,password_input))
         user = c.fetchone()
         if user:
+            st.session_state.logged_in = True
+            st.session_state.username = username_input
+            st.session_state.email = user[2]
             st.success("로그인 성공")
-            st.header("오늘 기록")
-            money = st.number_input("오늘 지출",min_value=0)
-            study = st.number_input("공부 시간",min_value=0)
-            exercise = st.number_input("운동 시간",min_value=0)
-
-            if st.button("기록 저장"):
-                score, grade, advice = ai_daily_report(money,study,exercise)
-                today = datetime.now().strftime("%Y-%m-%d")
-                c.execute("INSERT INTO records VALUES (?,?,?,?,?,?)",(username,today,money,study,exercise,score))
-                conn.commit()
-                st.success("기록 저장 완료")
-                st.subheader("AI 하루 리포트")
-                st.write("생산성 점수:",round(score,2))
-                st.write("등급:",grade)
-                st.write(advice)
-
-            df = pd.read_sql_query(f"SELECT * FROM records WHERE username='{username}'",conn)
-            if len(df) > 0:
-                st.subheader("나의 생산성 그래프")
-                st.line_chart(df["score"])
-                st.subheader("주간 AI 리포트")
-                report = weekly_report(username)
-                if report:
-                    st.write(report)
-                    st.subheader("📧 이메일로 리포트 받기")
-                    email = user[2]
-                    if st.button("이메일 전송"):
-                        send_email(email,report)
-                        st.success("이메일 전송 완료")
-
-            st.subheader("💳 유료 구독 (PRO)")
-            # ★ Stripe 테스트 링크 포함
-            st.markdown("""
-[PAIOS PRO 구독 - 월 9,900원](https://buy.stripe.com/test_6oE5nN4Nx1XK0S0bII)
-""")
         else:
             st.error("로그인 실패")
+
+# ----------------------
+# 로그인 상태 유지
+# ----------------------
+if st.session_state.logged_in:
+    st.header(f"{st.session_state.username}님, 오늘 기록")
+    money = st.number_input("오늘 지출", min_value=0)
+    study = st.number_input("공부 시간", min_value=0)
+    exercise = st.number_input("운동 시간", min_value=0)
+
+    if st.button("기록 저장"):
+        score, grade, advice = ai_daily_report(money, study, exercise)
+        today = datetime.now().strftime("%Y-%m-%d")
+        c.execute("INSERT INTO records VALUES (?,?,?,?,?,?)",
+                  (st.session_state.username, today, money, study, exercise, score))
+        conn.commit()
+        st.success("기록 저장 완료")
+        st.subheader("AI 하루 리포트")
+        st.write("생산성 점수:", round(score, 2))
+        st.write("등급:", grade)
+        st.write(advice)
+
+    df = pd.read_sql_query(f"SELECT * FROM records WHERE username='{st.session_state.username}'", conn)
+    if len(df) > 0:
+        st.subheader("나의 생산성 그래프")
+        st.line_chart(df["score"])
+        st.subheader("주간 AI 리포트")
+        report = weekly_report(st.session_state.username)
+        if report:
+            st.write(report)
+            st.subheader("📧 이메일로 리포트 받기")
+            if st.button("이메일 전송"):
+                send_email(st.session_state.email, report)
+                st.success("이메일 전송 완료")
+
+    st.subheader("💳 유료 구독 (PRO)")
+    # Stripe 테스트 링크
+    st.markdown("""
+[PAIOS PRO 구독 - 월 9,900원](https://buy.stripe.com/test_6oE5nN4Nx1XK0S0bII)
+""")
 
 
 
