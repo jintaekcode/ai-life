@@ -80,18 +80,18 @@ def weekly_report(username):
     return report
 
 # ----------------------
-# 이메일 발송 함수
+# 이메일 발송 함수 (UTF-8 안전)
 # ----------------------
 def send_email(to_email, report):
     from_email = "your_email@gmail.com"   # ← 실제 Gmail 계정
-    password = "앱비밀번호"               # ← Gmail 앱 비밀번호
-    msg = MIMEText(report)
+    password = "앱비밀번호"               # ← Gmail 앱 비밀번호 (16자리, 영문/숫자)
+    msg = MIMEText(report, _charset="utf-8")  # utf-8로 인코딩
     msg["Subject"] = "PAIOS 주간 리포트"
     msg["From"] = from_email
     msg["To"] = to_email
-    server = smtplib.SMTP_SSL("smtp.gmail.com",465)
-    server.login(from_email,password)
-    server.sendmail(from_email,to_email,msg.as_string())
+    server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+    server.login(from_email, password)
+    server.sendmail(from_email, to_email, msg.as_string())
     server.quit()
 
 # ----------------------
@@ -110,7 +110,7 @@ if "email" not in st.session_state:
 st.title("🚀 PAIOS - AI 생산성 분석 서비스")
 
 menu = ["로그인","회원가입"]
-choice = st.sidebar.selectbox("메뉴",menu)
+choice = st.sidebar.selectbox("메뉴", menu)
 
 # ----------------------
 # 회원가입
@@ -118,10 +118,10 @@ choice = st.sidebar.selectbox("메뉴",menu)
 if choice == "회원가입":
     st.subheader("회원가입")
     new_user = st.text_input("아이디")
-    new_pass = st.text_input("비밀번호",type="password")
+    new_pass = st.text_input("비밀번호", type="password")
     new_email = st.text_input("이메일")
     if st.button("가입"):
-        c.execute("INSERT INTO users VALUES (?,?,?)",(new_user,new_pass,new_email))
+        c.execute("INSERT INTO users VALUES (?,?,?)", (new_user, new_pass, new_email))
         conn.commit()
         st.success("회원가입 완료")
 
@@ -131,9 +131,9 @@ if choice == "회원가입":
 if choice == "로그인":
     st.subheader("로그인")
     username_input = st.text_input("아이디")
-    password_input = st.text_input("비밀번호",type="password")
+    password_input = st.text_input("비밀번호", type="password")
     if st.button("로그인"):
-        c.execute("SELECT * FROM users WHERE username=? AND password=?",(username_input,password_input))
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username_input, password_input))
         user = c.fetchone()
         if user:
             st.session_state.logged_in = True
