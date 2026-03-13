@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
-import smtplib
-from email.mime.text import MIMEText
+import requests
+import json
 
 # ----------------------
 # DB 연결
@@ -80,19 +80,24 @@ def weekly_report(username):
     return report
 
 # ----------------------
-# 이메일 발송 함수 (UTF-8 안전)
+# SendGrid 이메일 함수
 # ----------------------
+SENDGRID_API_KEY = "YOUR_SENDGRID_API_KEY"  # ← 발급받은 SendGrid API 키
+
 def send_email(to_email, report):
-    from_email = "your_email@gmail.com"   # ← 실제 Gmail 계정
-    password = "앱비밀번호"               # ← Gmail 앱 비밀번호 (16자리, 영문/숫자)
-    msg = MIMEText(report, _charset="utf-8")  # utf-8로 인코딩
-    msg["Subject"] = "PAIOS 주간 리포트"
-    msg["From"] = from_email
-    msg["To"] = to_email
-    server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-    server.login(from_email, password)
-    server.sendmail(from_email, to_email, msg.as_string())
-    server.quit()
+    url = "https://api.sendgrid.com/v3/mail/send"
+    headers = {
+        "Authorization": f"Bearer {SENDGRID_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": "your_verified_sendgrid_email@example.com"},
+        "subject": "PAIOS 주간 리포트",
+        "content": [{"type": "text/plain", "value": report}]
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    return response.status_code
 
 # ----------------------
 # 세션 상태 초기화
@@ -174,15 +179,15 @@ if st.session_state.logged_in:
             st.write(report)
             st.subheader("📧 이메일로 리포트 받기")
             if st.button("이메일 전송"):
-                send_email(st.session_state.email, report)
-                st.success("이메일 전송 완료")
+                status = send_email(st.session_state.email, report)
+                if status == 202:
+                    st.success("이메일 전송 완료")
+                else:
+                    st.error("이메일 전송 실패")
 
     st.subheader("💳 유료 구독 (PRO)")
-    # Stripe 테스트 링크
+    # Stripe Checkout Session URL 필요
     st.markdown("""
-[PAIOS PRO 구독 - 월 9,900원](https://buy.stripe.com/test_6oE5nN4Nx1XK0S0bII)
+[PAIOS PRO 구독 - 월 9,900원](여기에_실제_Stripe_Checkout_URL)
 """)
-
-
-
 
