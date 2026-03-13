@@ -178,12 +178,20 @@ if choice=="로그인":
 
                 st.write("평균 생산성:",round(avg,2))
 
-                if st.button("AI 분석"):
+if st.button("AI 분석"):
 
-                    result = ai_analysis(df)
+    avg_money = df["money"].mean()
+    avg_study = df["study"].mean()
 
-                    st.write(result)
+    st.write("AI 분석 결과")
 
+    st.write("평균 지출:", avg_money)
+    st.write("평균 공부시간:", avg_study)
+
+    if avg_money > 50000:
+        st.warning("지출이 높은 편입니다.")
+    else:
+        st.success("지출 관리가 잘 되고 있습니다.")
                 st.subheader("주간 리포트")
 
                 week = weekly_report(username)
@@ -214,6 +222,7 @@ if choice=="구독":
     """)
 
     st.write("결제는 Stripe 연동 필요")
+
 
 
 
