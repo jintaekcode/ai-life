@@ -1,0 +1,22 @@
+import streamlit as st
+
+st.title("AI 생활 분석")
+
+money = st.number_input("오늘 소비 금액")
+study = st.number_input("공부 시간")
+exercise = st.number_input("운동 시간")
+
+if st.button("분석"):
+
+    st.write("### 분석 결과")
+
+    if money > 30000:
+        st.write("지출이 많습니다")
+
+    if study < 2:
+        st.write("공부 시간이 부족합니다")
+
+    if exercise == 0:
+        st.write("운동이 필요합니다")
+
+    st.write("생활 패턴 개선이 필요합니다")
