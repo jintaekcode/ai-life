@@ -159,12 +159,12 @@ if choice == "로그인":
                         st.success("이메일 전송 완료")
 
             st.subheader("💳 유료 구독 (PRO)")
+            # ★ Stripe 테스트 링크 포함
             st.markdown("""
-[PAIOS PRO 구독 - 월 9,900원](https://buy.stripe.com/test_link_here)
+[PAIOS PRO 구독 - 월 9,900원](https://buy.stripe.com/test_6oE5nN4Nx1XK0S0bII)
 """)
         else:
             st.error("로그인 실패")
-
 
 
 
